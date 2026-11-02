@@ -20,12 +20,6 @@ export class MarketMathSession {
   #rng;
 
   constructor(seed) {
-    if (plainObject(seed) && Array.isArray(seed.question) === false) {
-      validatePayload(seed);
-      this.#state = clone(seed);
-      this.#rng = SeededRng.fromState(seed.rngState);
-      return;
-    }
     if (plainObject(seed) && Array.isArray(seed.stalls)) {
       validatePayload(seed);
       this.#state = clone(seed);
