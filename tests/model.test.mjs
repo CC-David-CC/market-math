@@ -47,6 +47,17 @@ test("change is never negative and two-step coupons stay below the total", () =>
   }
 });
 
+test("the market breakdown contains integer steps and coins that sum to change", () => {
+  const session = new MarketMathSession("breakdown");
+  while (session.question.kind !== "change") session.answer(session.question.answer);
+  const breakdown = session.breakdown;
+  assert.equal(breakdown.kind, "change");
+  assert.equal(breakdown.items.reduce((sum, item) => sum + item.cents, 0), breakdown.total);
+  assert.equal(breakdown.steps.some(step => step.label === "paid"), true);
+  const coins = breakdown.coins.reduce((sum, coin) => sum + coin.cents * coin.count, 0);
+  assert.equal(coins, session.question.answer);
+});
+
 test("estimation answers are dollar bands containing the exact total", () => {
   for (let seed = 0; seed < 60; seed++) {
     const session = new MarketMathSession(`bands-${seed}`);
