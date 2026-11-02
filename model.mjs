@@ -12,7 +12,7 @@ import {
 import {makeLearningReport} from "../shared/experience.mjs";
 
 export const MARKET_MATH_APP_ID = "market-math";
-export const MARKET_MATH_CONTENT_VERSION = "market-math-core-1";
+export const MARKET_MATH_CONTENT_VERSION = "market-math-core-2";
 const STALL_KINDS = ["total", "change", "estimate", "two-step", "total", "change", "estimate", "two-step", "total", "change", "estimate", "two-step"];
 const ITEM_NAMES = ["pencil", "eraser", "notebook", "apple", "juice", "paint", "brush", "poster"];
 
