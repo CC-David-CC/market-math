@@ -80,15 +80,22 @@ export class MarketMathSession {
 
   answer(cents) {
     if (this.#state.phase !== "question") throw Error("No market question is ready.");
-    if (!Number.isSafeInteger(cents)) throw Error("Money answers must be integer cents.");
-    if (!this.#state.question.choices.includes(cents)) throw Error("Answer must be one of the displayed choices.");
+    const question = this.#state.question;
+    if (question.kind === "estimate") {
+      if (!validBand(cents)) throw Error("Estimate answers must be a cent band.");
+      if (!question.choices.some(band => sameBand(band, cents))) throw Error("Answer must be one of the displayed choices.");
+    } else {
+      if (!Number.isSafeInteger(cents)) throw Error("Money answers must be integer cents.");
+      if (!question.choices.includes(cents)) throw Error("Answer must be one of the displayed choices.");
+    }
     const firstAttempt = this.#state.attemptsForStall === 0;
     this.#state.attemptsForStall++;
-    if (cents !== this.#state.question.answer) {
+    const correct = question.kind === "estimate" ? sameBand(cents, question.answer) : cents === question.answer;
+    if (!correct) {
       this.#state.phase = "explain";
-      this.#state.related = makeDifferentQuestion(this.#state.question, this.#rng);
+      this.#state.related = makeDifferentQuestion(question, this.#rng);
       this.#state.rngState = this.#rng.state;
-      return {correct: false, model: explainQuestion(this.#state.question), next: "continue"};
+      return {correct: false, model: explainQuestion(question), next: "continue"};
     }
     this.#state.stalls[this.#state.index] = {
       ...this.#state.stalls[this.#state.index],
@@ -137,8 +144,23 @@ function makeQuestion(kind, rng) {
     return withChoices({kind, items, total, paid, answer: paid - total}, rng);
   }
   if (kind === "estimate") {
-    const estimate = Math.ceil(total / 100) * 100;
-    return withChoices({kind, items, total, answer: estimate}, rng);
+    const answer = {lower: Math.max(0, Math.floor(total / 100) * 100), upper: Math.min(9999, Math.floor(total / 100) * 100 + 99)};
+    const values = [answer];
+    for (const offset of rng.shuffle([-200, -100, 100, 200, -300, 300])) {
+      const lower = answer.lower + offset;
+      if (lower < 0 || lower > 9900) continue;
+      const candidate = {lower, upper: lower + 99};
+      if (!values.some(value => sameBand(value, candidate)) && values.length < 4) values.push(candidate);
+    }
+    for (let step = 1; values.length < 4; step++) {
+      const lower = answer.lower + step * 500;
+      if (lower <= 9900) {
+        const candidate = {lower, upper: lower + 99};
+        if (!values.some(value => sameBand(value, candidate))) values.push(candidate);
+      }
+    }
+    if (values.length !== 4) throw Error("Could not generate estimate bands.");
+    return {kind, items, total, answer, choices: rng.shuffle(values)};
   }
   const coupon = Math.min(total - 10, rng.int(10, Math.max(10, Math.floor(total / 3))));
   return withChoices({kind, items, total, coupon, answer: total - coupon}, rng);
@@ -146,8 +168,22 @@ function makeQuestion(kind, rng) {
 
 function withChoices(question, rng) {
   const candidates = new Set([question.answer]);
+  const wrongOperation = [];
+  if (question.kind === "total") {
+    const smallest = Math.min(...question.items.map(value => value.cents));
+    wrongOperation.push(question.total - smallest, question.total + smallest);
+  } else if (question.kind === "change") {
+    wrongOperation.push(question.total, question.paid + question.answer);
+  } else if (question.kind === "two-step") {
+    wrongOperation.push(question.total + question.coupon, question.total - question.coupon - 1);
+  }
+  for (const candidate of wrongOperation) {
+    if (Number.isSafeInteger(candidate) && candidate >= 0 && candidate !== question.answer) candidates.add(candidate);
+    if (candidates.size === 4) break;
+  }
   for (const delta of rng.shuffle([-1, 1, -10, 10, -100, 100, 5, -5])) {
-    if (question.answer + delta >= 0) candidates.add(question.answer + delta);
+    const candidate = question.answer + delta;
+    if (candidate >= 0 && candidate !== question.answer) candidates.add(candidate);
     if (candidates.size === 4) break;
   }
   return {...question, choices: rng.shuffle([...candidates])};
@@ -163,13 +199,22 @@ function makeDifferentQuestion(previous, rng) {
 
 function explainQuestion(question) {
   if (question.kind === "change") return `Pay ${money(question.paid)} for a ${money(question.total)} total; change is ${money(question.answer)}.`;
-  if (question.kind === "estimate") return `The exact total is ${money(question.total)}, so the nearest dollar estimate is ${money(question.answer)}.`;
+  if (question.kind === "estimate") return `The exact total is ${money(question.total)}, so the right dollar band is ${money(question.answer.lower)}–${money(question.answer.upper)}.`;
   if (question.kind === "two-step") return `Subtract the ${money(question.coupon)} coupon from ${money(question.total)} to get ${money(question.answer)}.`;
   return `Add the item prices to get ${money(question.answer)}.`;
 }
 
 function money(cents) {
   return `$${Math.floor(cents / 100)}.${String(cents % 100).padStart(2, "0")}`;
+}
+
+function validBand(value) {
+  return exactKeys(value, ["lower", "upper"]) && integer(value.lower, 0, 9900) &&
+    integer(value.upper, value.lower, 9999);
+}
+
+function sameBand(left, right) {
+  return left.lower === right.lower && left.upper === right.upper;
 }
 
 function validItems(items) {
@@ -180,23 +225,32 @@ function validItems(items) {
 
 function validQuestion(question) {
   if (!plainObject(question) || !["total", "change", "estimate", "two-step"].includes(question.kind) ||
-      !validItems(question.items) || !integer(question.total, 20, 5997) ||
-      !uniqueNumbers(question.choices, 0, 99999) || question.choices.length !== 4 ||
-      !integer(question.answer, 0, 99999) || question.choices.filter(value => value === question.answer).length !== 1) return false;
+      !validItems(question.items) || !integer(question.total, 20, 5997) || !Array.isArray(question.choices) ||
+      question.choices.length !== 4) return false;
   if (question.items.reduce((sum, value) => sum + value.cents, 0) !== question.total) return false;
   if (question.kind === "total") {
-    return exactKeys(question, ["kind", "items", "total", "answer", "choices"]) && question.answer === question.total;
+    return exactKeys(question, ["kind", "items", "total", "answer", "choices"]) &&
+      uniqueNumbers(question.choices, 0, 99999) && integer(question.answer, 0, 99999) &&
+      question.choices.filter(value => value === question.answer).length === 1 && question.answer === question.total;
   }
   if (question.kind === "change") {
     return exactKeys(question, ["kind", "items", "total", "paid", "answer", "choices"]) &&
-      integer(question.paid, question.total, 9999) && question.answer === question.paid - question.total;
+      uniqueNumbers(question.choices, 0, 99999) && integer(question.paid, question.total, 9999) &&
+      integer(question.answer, 0, 99999) && question.choices.filter(value => value === question.answer).length === 1 &&
+      question.answer === question.paid - question.total;
   }
   if (question.kind === "estimate") {
     return exactKeys(question, ["kind", "items", "total", "answer", "choices"]) &&
-      question.answer === Math.ceil(question.total / 100) * 100;
+      validBand(question.answer) && question.choices.every(validBand) &&
+      question.choices.filter(band => sameBand(band, question.answer)).length === 1 &&
+      question.total >= question.answer.lower && question.total <= question.answer.upper;
   }
+  if (!uniqueNumbers(question.choices, 0, 99999) || !integer(question.answer, 0, 99999) ||
+      question.choices.filter(value => value === question.answer).length !== 1) return false;
   return exactKeys(question, ["kind", "items", "total", "coupon", "answer", "choices"]) &&
-    integer(question.coupon, 10, question.total - 1) && question.answer === question.total - question.coupon;
+    uniqueNumbers(question.choices, 0, 99999) && integer(question.coupon, 10, question.total - 1) &&
+    integer(question.answer, 0, 99999) && question.choices.filter(value => value === question.answer).length === 1 &&
+    question.answer === question.total - question.coupon;
 }
 
 function validatePayload(state) {

@@ -17,9 +17,15 @@ test("all money questions use bounded integer cents and one correct choice", () 
     const session = new MarketMathSession(`market-${seed}`);
     while (session.phase !== "done") {
       const question = session.question;
-      assert.ok(Number.isSafeInteger(question.answer));
-      assert.equal(question.choices.filter(value => value === question.answer).length, 1);
-      assert.equal(new Set(question.choices).size, 4);
+      if (question.kind === "estimate") {
+        assert.equal(Number.isSafeInteger(question.answer.lower), true);
+        assert.equal(question.choices.filter(value => JSON.stringify(value) === JSON.stringify(question.answer)).length, 1);
+        assert.equal(new Set(question.choices.map(JSON.stringify)).size, 4);
+      } else {
+        assert.ok(Number.isSafeInteger(question.answer));
+        assert.equal(question.choices.filter(value => value === question.answer).length, 1);
+        assert.equal(new Set(question.choices).size, 4);
+      }
       assert.equal(question.items.reduce((sum, item) => sum + item.cents, 0), question.total);
       session.answer(question.answer);
     }
@@ -36,6 +42,20 @@ test("change is never negative and two-step coupons stay below the total", () =>
         assert.equal(question.answer, question.paid - question.total);
       }
       if (question.kind === "two-step") assert.ok(question.coupon < question.total);
+      session.answer(question.answer);
+    }
+  }
+});
+
+test("estimation answers are dollar bands containing the exact total", () => {
+  for (let seed = 0; seed < 60; seed++) {
+    const session = new MarketMathSession(`bands-${seed}`);
+    while (session.phase !== "done") {
+      const question = session.question;
+      if (question.kind === "estimate") {
+        assert.ok(question.total >= question.answer.lower && question.total <= question.answer.upper);
+        assert.equal(question.choices.every(band => Number.isSafeInteger(band.lower) && Number.isSafeInteger(band.upper)), true);
+      }
       session.answer(question.answer);
     }
   }
