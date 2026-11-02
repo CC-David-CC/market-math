@@ -68,6 +68,10 @@ export class MarketMathSession {
     return clone(this.#state.related);
   }
 
+  get breakdown() {
+    return this.#state.question ? marketBreakdown(this.#state.question) : null;
+  }
+
   get stars() {
     return this.#state.stars;
   }
@@ -225,6 +229,41 @@ function explainQuestion(question) {
 
 function money(cents) {
   return `$${Math.floor(cents / 100)}.${String(cents % 100).padStart(2, "0")}`;
+}
+
+function marketBreakdown(question) {
+  const coins = changeCoins(question.kind === "change" || question.kind === "two-step" ? question.answer : 0);
+  if (question.kind === "total") {
+    return {kind: question.kind, items: clone(question.items), total: question.total,
+      steps: [{label: "sum", cents: question.total}], coins};
+  }
+  if (question.kind === "change") {
+    return {kind: question.kind, items: clone(question.items), total: question.total,
+      steps: [{label: "paid", cents: question.paid}, {label: "change", cents: question.answer}],
+      coins: changeCoins(question.answer)};
+  }
+  if (question.kind === "estimate") {
+    return {kind: question.kind, items: clone(question.items), total: question.total,
+      band: clone(question.answer), steps: [], coins};
+  }
+  return {kind: question.kind, items: clone(question.items), total: question.total,
+    steps: [{label: "coupon", cents: question.coupon}, {label: "after coupon", cents: question.answer}],
+    coins: changeCoins(question.answer)};
+}
+
+function changeCoins(cents) {
+  const denominations = [5000, 2000, 1000, 500, 200, 100, 50, 20, 10, 5, 1];
+  const coins = [];
+  let remaining = cents;
+  for (const denomination of denominations) {
+    const count = Math.floor(remaining / denomination);
+    if (count > 0) {
+      coins.push({cents: denomination, count});
+      remaining -= count * denomination;
+    }
+  }
+  if (remaining !== 0) throw Error("Coin breakdown did not cover the amount.");
+  return coins;
 }
 
 function validBand(value) {
