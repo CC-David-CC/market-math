@@ -8,8 +8,8 @@ import {
   plainObject,
   string,
   uniqueNumbers,
-} from "../shared/core.mjs";
-import {makeLearningReport} from "../shared/experience.mjs";
+} from "@webos/learning-game-core/core";
+import {makeLearningReport} from "@webos/learning-game-core/experience";
 
 export const MARKET_MATH_APP_ID = "market-math";
 export const MARKET_MATH_CONTENT_VERSION = "market-math-core-2";
