@@ -1,0 +1,15 @@
+{
+  "id": "market-math",
+  "name": "Market Math",
+  "category": "Games",
+  "version": "0.1.0",
+  "description": "Decimal money, change making, estimation, and shopping calculations for lively farmers market stalls.",
+  "entry": "index.mjs",
+  "window": {
+    "title": "Market Math",
+    "width": 880,
+    "height": 640,
+    "minWidth": 360,
+    "minHeight": 420
+  }
+}

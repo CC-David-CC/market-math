@@ -1,0 +1,251 @@
+:root {
+  --market-bg: #fdfaf3;
+  --market-card-bg: #ffffff;
+  --market-border: #f0e6d2;
+  --market-text: #2e261d;
+  --market-accent: #c47c2b;
+  --market-accent-light: #fbe6cb;
+  --market-active-stall: #fff8e1;
+  --market-solved-stall: #e8f5e9;
+  --market-touch-target: 44px;
+}
+
+.market-math-app {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background: var(--market-bg);
+  color: var(--market-text);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  box-sizing: border-box;
+  padding: 12px;
+  gap: 12px;
+  overflow: auto;
+}
+
+.market-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--market-border);
+}
+
+.market-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--market-accent);
+}
+
+.market-stats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.market-badge {
+  background: #ffffff;
+  border: 1px solid var(--market-border);
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.market-main {
+  display: flex;
+  flex: 1;
+  gap: 12px;
+  min-height: 0;
+}
+
+.market-stalls-section {
+  flex: 1 1 360px;
+  background: var(--market-card-bg);
+  border-radius: 12px;
+  border: 1px solid var(--market-border);
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+.market-stall-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.market-stall {
+  aspect-ratio: 1;
+  background: #fafafa;
+  border: 2px dashed #d7ccc8;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  font-size: 0.75rem;
+  transition: all 0.2s ease;
+}
+
+.market-stall.active {
+  background: var(--market-active-stall);
+  border: 2px solid #ffa000;
+  box-shadow: 0 0 6px rgba(255, 160, 0, 0.4);
+}
+
+.market-stall.solved {
+  background: var(--market-solved-stall);
+  border: 2px solid #4caf50;
+}
+
+.market-workbench {
+  flex: 1 1 400px;
+  display: flex;
+  flex-direction: column;
+}
+
+.market-card {
+  background: var(--market-card-bg);
+  border: 1px solid var(--market-border);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.register-title {
+  margin-top: 0;
+  font-size: 1rem;
+  color: var(--market-accent);
+}
+
+.register-receipt {
+  background: #fffdf9;
+  border: 1px dashed var(--market-accent);
+  border-radius: 8px;
+  padding: 12px;
+  margin: 12px 0;
+  font-family: monospace;
+}
+
+.receipt-item-list {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.receipt-item {
+  margin: 4px 0;
+}
+
+.receipt-coupon {
+  color: #d32f2f;
+  font-weight: 700;
+  margin-top: 6px;
+}
+
+.register-choices {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.market-choice-btn {
+  min-height: var(--market-touch-target);
+  background: #ffffff;
+  border: 2px solid var(--market-border);
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 1.15rem;
+  cursor: pointer;
+  padding: 8px 12px;
+  transition: all 0.15s ease;
+}
+
+.market-choice-btn:hover {
+  background: var(--market-accent-light);
+  border-color: var(--market-accent);
+}
+
+.market-btn {
+  min-height: var(--market-touch-target);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  font-size: 0.95rem;
+}
+
+.market-btn-primary {
+  background: var(--market-accent);
+  color: white;
+}
+
+.market-btn-outline {
+  background: transparent;
+  color: var(--market-text);
+  border: 1px solid #b0bec5;
+}
+
+.market-controls {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+/* Tier 1: Phone (< 768px) */
+@media (max-width: 768px) {
+  .market-math-app {
+    padding: 8px;
+    gap: 8px;
+  }
+  .market-main {
+    flex-direction: column;
+  }
+  .market-stalls-section {
+    flex: 0 0 auto;
+  }
+  .market-stall-grid {
+    grid-template-columns: repeat(6, 1fr);
+  }
+  .market-choice-btn {
+    min-height: 48px;
+  }
+}
+
+/* Tier 2: 1080p Desktop (1024px to 2559px) */
+@media (min-width: 1024px) and (max-width: 2559px) {
+  .market-stalls-section {
+    flex: 0 0 380px;
+  }
+  .market-workbench {
+    flex: 1;
+  }
+}
+
+/* Tier 3: 4K UHD (>= 2560px) */
+@media (min-width: 2560px) {
+  :root {
+    --market-touch-target: 56px;
+  }
+  .market-math-app {
+    padding: 24px;
+    gap: 20px;
+    font-size: 1.3rem;
+  }
+  .market-title {
+    font-size: 2rem;
+  }
+  .market-stall-grid {
+    gap: 16px;
+  }
+  .market-choice-btn {
+    font-size: 1.6rem;
+    padding: 16px;
+  }
+}
