@@ -43,6 +43,7 @@
 
 .market-stats {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
 }
@@ -198,54 +199,54 @@
   justify-content: flex-end;
 }
 
-/* Tier 1: Phone (< 768px) */
-@media (max-width: 768px) {
-  .market-math-app {
-    padding: 8px;
-    gap: 8px;
-  }
-  .market-main {
-    flex-direction: column;
-  }
-  .market-stalls-section {
-    flex: 0 0 auto;
-  }
-  .market-stall-grid {
-    grid-template-columns: repeat(6, 1fr);
-  }
-  .market-choice-btn {
-    min-height: 48px;
-  }
+.market-math-app[data-tier="phone"] {
+  padding: 8px;
+  gap: 8px;
 }
 
-/* Tier 2: 1080p Desktop (1024px to 2559px) */
-@media (min-width: 1024px) and (max-width: 2559px) {
-  .market-stalls-section {
-    flex: 0 0 380px;
-  }
-  .market-workbench {
-    flex: 1;
-  }
+.market-math-app[data-tier="phone"] .market-main {
+  flex-direction: column;
 }
 
-/* Tier 3: 4K UHD (>= 2560px) */
-@media (min-width: 2560px) {
-  :root {
-    --market-touch-target: 56px;
-  }
-  .market-math-app {
-    padding: 24px;
-    gap: 20px;
-    font-size: 1.3rem;
-  }
-  .market-title {
-    font-size: 2rem;
-  }
-  .market-stall-grid {
-    gap: 16px;
-  }
-  .market-choice-btn {
-    font-size: 1.6rem;
-    padding: 16px;
-  }
+.market-math-app[data-tier="phone"] .market-stalls-section {
+  flex: 0 0 auto;
+}
+
+.market-math-app[data-tier="phone"] .market-stall-grid {
+  grid-template-columns: repeat(auto-fit, minmax(66px, 1fr));
+}
+
+.market-math-app[data-tier="phone"] .market-choice-btn {
+  min-height: 48px;
+}
+
+.market-math-app[data-tier="desktop"] .market-stalls-section {
+  flex: 0 0 380px;
+}
+
+.market-math-app[data-tier="desktop"] .market-workbench {
+  flex: 1;
+}
+
+.market-math-app[data-tier="4k"] {
+  --market-touch-target: 56px;
+}
+
+.market-math-app[data-tier="4k"] {
+  padding: 24px;
+  gap: 20px;
+  font-size: 1.3rem;
+}
+
+.market-math-app[data-tier="4k"] .market-title {
+  font-size: 2rem;
+}
+
+.market-math-app[data-tier="4k"] .market-stall-grid {
+  gap: 16px;
+}
+
+.market-math-app[data-tier="4k"] .market-choice-btn {
+  font-size: 1.6rem;
+  padding: 16px;
 }
