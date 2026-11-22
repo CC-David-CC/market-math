@@ -1,3 +1,4 @@
+import {connectGameFiles} from '@webos/learning-game-core/workspace';
 import {MarketMathSession} from './model.mjs';
 import {computeLayout} from './layout.mjs';
 
@@ -189,6 +190,17 @@ export function mount(host, options = {}) {
     renderWorkbench();
   }
 
+  const files = connectGameFiles(host, {
+    header,
+    id: 'market-math',
+    title: 'Market Math',
+    serialize: () => session.encodeSave(),
+    restore(snapshot) {
+      session = MarketMathSession.fromSave(snapshot);
+      render();
+    },
+  });
+
   render();
 
   if (typeof ResizeObserver !== 'undefined' && root.getBoundingClientRect) {
@@ -202,8 +214,11 @@ export function mount(host, options = {}) {
 
   return {
     element: root,
-    session,
+    get session() { return session; },
+    ready: files.ready,
+    requestClose: files.requestClose,
     dispose() {
+      files.dispose?.();
       disposed = true;
       resizeObserver?.disconnect();
       resizeObserver = null;
