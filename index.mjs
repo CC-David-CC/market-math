@@ -36,7 +36,7 @@ function createElement(host, tag, className, text) {
 }
 
 export function mount(host, options = {}) {
-  const root = createElement(host, 'div', 'market-math-app');
+  const root = createElement(host, 'div', 'window-content market-math-app');
 
   let session = new MarketMathSession(`market-${Date.now()}`);
   let disposed = false;
